@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../core/providers/theme_provider.dart';
 import '../../discount_calculator/screens/discount_calculator_screen.dart';
 import '../../sales_price_calculator/screens/sales_price_calculator_screen.dart';
 import '../../product_inventory/screens/product_inventory_screen.dart';
 import '../../sales_history/screens/sales_history_screen.dart';
-import '../../../main.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -45,7 +46,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
           IconButton(
             icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
             onPressed: () {
-              MyApp.of(context)?.toggleTheme();
+              context.read<ThemeProvider>().toggleTheme();
             },
           ),
         ],

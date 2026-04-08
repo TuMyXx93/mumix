@@ -54,3 +54,6 @@ GoogleService-Info.plist
 
 # Local Debugging / Asset folders (User requested)
 ImagesErrors/
+
+# OpenCode
+.opencode/node_modules/
