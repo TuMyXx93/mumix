@@ -15,12 +15,22 @@ Este proyecto se adhiere estrictamente a un diseño Domain-Driven adaptado para 
 
 *   **`core/`**: Contiene utilidades de toda la aplicación, temas, constantes y formateadores (especialmente para precisión matemática y evitar errores de punto flotante).
 *   **`features/`**: Contiene los dominios reales de la aplicación. Cada feature está completamente aislado y contiene su propia UI (`screens`/`widgets`), State Management (`providers`) y Lógica (`services`/`use_cases`).
+    *   `calculator/`
     *   `discount_calculator/`
     *   `sales_price_calculator/`
     *   `product_inventory/`
     *   `sales_history/`
+    *   `settings/`
     *   `home/`
     *   `welcome/`
+
+### UI Design System
+
+La consistencia visual se gobierna desde tema global y reglas de diseño reutilizable:
+
+*   Tema centralizado en `lib/core/themes/` (Material 3 light/dark).
+*   Tokens visuales vía `Theme.of(context).colorScheme` y `textTheme`.
+*   Sin colores hardcodeados para componentes de uso general.
 
 ## 🧠 Lógica y Reglas de Estado
 
@@ -30,13 +40,13 @@ Este proyecto se adhiere estrictamente a un diseño Domain-Driven adaptado para 
 
 ## 🤖 Ecosistema de IA
 
-Este repositorio se mantiene en colaboración con un ecosistema de Agentes de IA. Consulta `AGENTS.md` para ver las directrices operativas estrictas, los subagentes (`ui-ux-agent`, `qa-integration-agent`, `tech-writer-agent`) y las "skills" activas (`git-ops-skill`, `math-precision-skill`) que imponen la calidad del código, la integridad arquitectónica y los flujos de trabajo de control de versiones.
+Este repositorio se mantiene en colaboración con un ecosistema de Agentes de IA. Consulta `AGENTS.md` para ver las directrices operativas estrictas, los subagentes (`ui-ux-agent`, `qa-integration-agent`, `devops-agent`, `tech-writer-agent`, `play-store-architect-agent`) y las skills activas (`clean-architecture-skill`, `provider-state-skill`, `design-system-skill`, `math-precision-skill`, `devsecops-workflow-skill`, `git-ops-skill`) que imponen calidad de código, coherencia visual, integridad arquitectónica y flujo de versionado.
 
 ## Instalación y Desarrollo
 1. Asegúrate de tener Flutter instalado (`sdk: ^3.6.0`).
 2. Clona el repositorio y ejecuta `flutter pub get` para instalar dependencias.
 3. Ejecuta `flutter run` para iniciar la aplicación.
-4. Ejecuta `flutter test` para ejecutar el ciclo de pruebas (El motor matemático exige 100% de cobertura de pruebas unitarias).
+4. Ejecuta `flutter test` para ejecutar el ciclo de pruebas.
 
 ---
 Desarrollado con ❤️ utilizando Flutter bajo el ecosistema de Agentes Numix.

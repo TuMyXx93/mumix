@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/providers/theme_provider.dart';
+import 'core/themes/app_theme.dart';
 import 'features/welcome/screens/welcome_screen.dart';
 import 'features/discount_calculator/providers/discount_provider.dart';
 import 'features/sales_price_calculator/providers/sales_price_provider.dart';
@@ -35,11 +36,8 @@ class MyApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           themeMode:
               themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-            useMaterial3: true,
-          ),
-          darkTheme: ThemeData.dark(useMaterial3: true),
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
           home: const WelcomeScreen(),
         );
       },

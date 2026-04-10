@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../providers/sales_price_provider.dart';
 
-class ScreenTwo extends StatefulWidget {
-  const ScreenTwo({super.key});
+class SalesPriceCalculatorScreen extends StatefulWidget {
+  const SalesPriceCalculatorScreen({super.key});
 
   @override
-  State<ScreenTwo> createState() => _ScreenTwoState();
+  State<SalesPriceCalculatorScreen> createState() =>
+      _SalesPriceCalculatorScreenState();
 }
 
-class _ScreenTwoState extends State<ScreenTwo> {
+class _SalesPriceCalculatorScreenState
+    extends State<SalesPriceCalculatorScreen> {
+  final _currencyFormat = NumberFormat.currency(symbol: r'$', decimalDigits: 2);
   final _formKey = GlobalKey<FormState>();
   final _costController = TextEditingController();
   final _profitController = TextEditingController();
@@ -32,15 +36,15 @@ class _ScreenTwoState extends State<ScreenTwo> {
   void _calculateSalePrice() {
     if (_formKey.currentState!.validate()) {
       context.read<SalesPriceProvider>().calculatePrice(
-        costStr: _costController.text,
-        profitPercentStr: _profitController.text,
-        taxStr: _taxController.text,
-      );
+            costStr: _costController.text,
+            profitPercentStr: _profitController.text,
+            taxStr: _taxController.text,
+          );
     }
   }
 
   String _formatCurrency(double value) {
-    return '\$${value.toStringAsFixed(2)}';
+    return _currencyFormat.format(value);
   }
 
   @override
@@ -56,7 +60,6 @@ class _ScreenTwoState extends State<ScreenTwo> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Precio de Venta'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -77,34 +80,37 @@ class _ScreenTwoState extends State<ScreenTwo> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Tipo de Margen Toggle
-              Consumer<SalesPriceProvider>(
-                builder: (context, provider, child) {
-                  return Card(
-                    elevation: 2,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text('Sobre Costo'),
-                          Switch(
-                            value: provider.marginType == MarginType.margin,
-                            onChanged: (value) {
-                              provider.setMarginType(
-                                value ? MarginType.margin : MarginType.markup,
-                              );
-                              if (_costController.text.isNotEmpty && _profitController.text.isNotEmpty) {
-                                _calculateSalePrice();
-                              }
-                            },
-                          ),
-                          const Text('Sobre Venta (Pro)'),
-                        ],
-                      ),
+              Consumer<SalesPriceProvider>(builder: (context, provider, child) {
+                return Card(
+                  elevation: 2,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        const Text('Sobre Costo', textAlign: TextAlign.center),
+                        Switch(
+                          value: provider.marginType == MarginType.margin,
+                          onChanged: (value) {
+                            provider.setMarginType(
+                              value ? MarginType.margin : MarginType.markup,
+                            );
+                            if (_costController.text.isNotEmpty &&
+                                _profitController.text.isNotEmpty) {
+                              _calculateSalePrice();
+                            }
+                          },
+                        ),
+                        const Text('Sobre Venta (Pro)',
+                            textAlign: TextAlign.center),
+                      ],
                     ),
-                  );
-                }
-              ),
+                  ),
+                );
+              }),
               const SizedBox(height: 16),
               Card(
                 elevation: 4,
@@ -114,14 +120,15 @@ class _ScreenTwoState extends State<ScreenTwo> {
                     children: [
                       TextFormField(
                         controller: _costController,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Costo Base del Producto',
-                          prefixIcon: Icon(Icons.inventory),
-                          border: OutlineInputBorder(),
+                          prefixIcon: const Icon(Icons.inventory),
+                          suffixIcon: _buildClearFieldButton(_costController),
                         ),
                         keyboardType: TextInputType.number,
                         inputFormatters: [
-                          FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+                          FilteringTextInputFormatter.allow(
+                              RegExp(r'^\d*\.?\d{0,2}')),
                         ],
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -136,14 +143,15 @@ class _ScreenTwoState extends State<ScreenTwo> {
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: _profitController,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Porcentaje de Ganancia (%)',
-                          prefixIcon: Icon(Icons.trending_up),
-                          border: OutlineInputBorder(),
+                          prefixIcon: const Icon(Icons.trending_up),
+                          suffixIcon: _buildClearFieldButton(_profitController),
                         ),
                         keyboardType: TextInputType.number,
                         inputFormatters: [
-                          FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+                          FilteringTextInputFormatter.allow(
+                              RegExp(r'^\d*\.?\d{0,2}')),
                         ],
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -158,14 +166,15 @@ class _ScreenTwoState extends State<ScreenTwo> {
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: _taxController,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Impuestos / IVA (%) (Opcional)',
-                          prefixIcon: Icon(Icons.account_balance),
-                          border: OutlineInputBorder(),
+                          prefixIcon: const Icon(Icons.account_balance),
+                          suffixIcon: _buildClearFieldButton(_taxController),
                         ),
                         keyboardType: TextInputType.number,
                         inputFormatters: [
-                          FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+                          FilteringTextInputFormatter.allow(
+                              RegExp(r'^\d*\.?\d{0,2}')),
                         ],
                       ),
                     ],
@@ -191,13 +200,14 @@ class _ScreenTwoState extends State<ScreenTwo> {
                         padding: const EdgeInsets.all(16.0),
                         child: Text(
                           provider.errorMessage!,
-                          style: TextStyle(color: Theme.of(context).colorScheme.error),
+                          style: TextStyle(
+                              color: Theme.of(context).colorScheme.error),
                           textAlign: TextAlign.center,
                         ),
                       ),
                     );
                   }
-                  
+
                   if (provider.finalPrice != null) {
                     return Card(
                       elevation: 4,
@@ -209,23 +219,33 @@ class _ScreenTwoState extends State<ScreenTwo> {
                           children: [
                             Text(
                               'Resumen Financiero',
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleLarge
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                               textAlign: TextAlign.center,
                             ),
                             const Divider(),
-                            _buildResultRow('Precio sin impuestos:', provider.baseSalePrice!),
-                            _buildResultRow('Ganancia Neta:', provider.profitAmount!),
+                            _buildResultRow('Precio sin impuestos:',
+                                provider.baseSalePrice!),
+                            _buildResultRow(
+                                'Ganancia Neta:', provider.profitAmount!),
                             if (provider.taxAmount! > 0)
-                              _buildResultRow('Impuestos:', provider.taxAmount!),
+                              _buildResultRow(
+                                  'Impuestos:', provider.taxAmount!),
                             const Divider(),
                             Text(
                               'Precio Final (Venta): ${_formatCurrency(provider.finalPrice!)}',
-                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                color: Theme.of(context).colorScheme.primary,
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .headlineSmall
+                                  ?.copyWith(
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                               textAlign: TextAlign.center,
                             ),
                           ],
@@ -249,13 +269,31 @@ class _ScreenTwoState extends State<ScreenTwo> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 16)),
-          Text(
-            _formatCurrency(value),
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          Expanded(
+            child: Text(label, style: const TextStyle(fontSize: 16)),
+          ),
+          const SizedBox(width: 12),
+          Flexible(
+            child: Text(
+              _formatCurrency(value),
+              textAlign: TextAlign.right,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildClearFieldButton(TextEditingController controller) {
+    return IconButton(
+      tooltip: 'Limpiar campo',
+      icon: const Icon(Icons.close_rounded, size: 18),
+      onPressed: () {
+        controller.clear();
+        setState(() {});
+      },
     );
   }
 }

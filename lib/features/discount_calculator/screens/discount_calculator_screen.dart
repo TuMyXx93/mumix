@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../providers/discount_provider.dart';
 
-class ScreenOne extends StatefulWidget {
-  const ScreenOne({super.key});
+class DiscountCalculatorScreen extends StatefulWidget {
+  const DiscountCalculatorScreen({super.key});
 
   @override
-  State<ScreenOne> createState() => _ScreenOneState();
+  State<DiscountCalculatorScreen> createState() =>
+      _DiscountCalculatorScreenState();
 }
 
-class _ScreenOneState extends State<ScreenOne> {
+class _DiscountCalculatorScreenState extends State<DiscountCalculatorScreen> {
+  final _currencyFormat = NumberFormat.currency(symbol: r'$', decimalDigits: 2);
   final _formKey = GlobalKey<FormState>();
   final _originalPriceController = TextEditingController();
   final _primaryDiscountController = TextEditingController();
@@ -35,16 +38,16 @@ class _ScreenOneState extends State<ScreenOne> {
   void _calculateDiscount() {
     if (_formKey.currentState!.validate()) {
       context.read<DiscountCalculatorProvider>().calculateDiscount(
-        originalPriceStr: _originalPriceController.text,
-        primaryDiscountStr: _primaryDiscountController.text,
-        additionalDiscountStr: _additionalDiscountController.text,
-        taxStr: _taxController.text,
-      );
+            originalPriceStr: _originalPriceController.text,
+            primaryDiscountStr: _primaryDiscountController.text,
+            additionalDiscountStr: _additionalDiscountController.text,
+            taxStr: _taxController.text,
+          );
     }
   }
 
   String _formatCurrency(double value) {
-    return '\$${value.toStringAsFixed(2)}';
+    return _currencyFormat.format(value);
   }
 
   @override
@@ -61,7 +64,6 @@ class _ScreenOneState extends State<ScreenOne> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Calculadora de Descuentos'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -84,33 +86,41 @@ class _ScreenOneState extends State<ScreenOne> {
             children: [
               // Tipo de Descuento Toggle
               Consumer<DiscountCalculatorProvider>(
-                builder: (context, provider, child) {
-                  return Card(
-                    elevation: 2,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text('Porcentaje (%)'),
-                          Switch(
-                            value: provider.discountType == DiscountType.fixedAmount,
-                            onChanged: (value) {
-                              provider.setDiscountType(
-                                value ? DiscountType.fixedAmount : DiscountType.percentage,
-                              );
-                              if (_originalPriceController.text.isNotEmpty && _primaryDiscountController.text.isNotEmpty) {
-                                _calculateDiscount();
-                              }
-                            },
-                          ),
-                          const Text('Monto Fijo (\$)'),
-                        ],
-                      ),
+                  builder: (context, provider, child) {
+                return Card(
+                  elevation: 2,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        const Text('Porcentaje (%)',
+                            textAlign: TextAlign.center),
+                        Switch(
+                          value:
+                              provider.discountType == DiscountType.fixedAmount,
+                          onChanged: (value) {
+                            provider.setDiscountType(
+                              value
+                                  ? DiscountType.fixedAmount
+                                  : DiscountType.percentage,
+                            );
+                            if (_originalPriceController.text.isNotEmpty &&
+                                _primaryDiscountController.text.isNotEmpty) {
+                              _calculateDiscount();
+                            }
+                          },
+                        ),
+                        const Text('Monto Fijo (\$)',
+                            textAlign: TextAlign.center),
+                      ],
                     ),
-                  );
-                }
-              ),
+                  ),
+                );
+              }),
               const SizedBox(height: 16),
               Card(
                 elevation: 4,
@@ -120,14 +130,17 @@ class _ScreenOneState extends State<ScreenOne> {
                     children: [
                       TextFormField(
                         controller: _originalPriceController,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Precio Original',
-                          prefixIcon: Icon(Icons.attach_money),
-                          border: OutlineInputBorder(),
+                          prefixIcon: const Icon(Icons.attach_money),
+                          suffixIcon: _buildClearFieldButton(
+                            _originalPriceController,
+                          ),
                         ),
                         keyboardType: TextInputType.number,
                         inputFormatters: [
-                          FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+                          FilteringTextInputFormatter.allow(
+                              RegExp(r'^\d*\.?\d{0,2}')),
                         ],
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -141,65 +154,79 @@ class _ScreenOneState extends State<ScreenOne> {
                       ),
                       const SizedBox(height: 16),
                       Consumer<DiscountCalculatorProvider>(
-                        builder: (context, provider, child) {
-                          bool isPercentage = provider.discountType == DiscountType.percentage;
-                          return TextFormField(
-                            controller: _primaryDiscountController,
-                            decoration: InputDecoration(
-                              labelText: isPercentage ? 'Descuento Principal (%)' : 'Descuento Principal (\$)',
-                              prefixIcon: Icon(isPercentage ? Icons.percent : Icons.money_off),
-                              border: const OutlineInputBorder(),
+                          builder: (context, provider, child) {
+                        bool isPercentage =
+                            provider.discountType == DiscountType.percentage;
+                        return TextFormField(
+                          controller: _primaryDiscountController,
+                          decoration: InputDecoration(
+                            labelText: isPercentage
+                                ? 'Descuento Principal (%)'
+                                : 'Descuento Principal (\$)',
+                            prefixIcon: Icon(
+                                isPercentage ? Icons.percent : Icons.money_off),
+                            suffixIcon: _buildClearFieldButton(
+                              _primaryDiscountController,
                             ),
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
-                            ],
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Por favor ingrese el descuento';
-                              }
-                              final discount = double.tryParse(value);
-                              if (discount == null) {
-                                return 'Por favor ingrese un número válido';
-                              }
-                              if (isPercentage && (discount < 0 || discount > 100)) {
-                                return 'El porcentaje debe estar entre 0 y 100';
-                              }
-                              return null;
-                            },
-                          );
-                        }
-                      ),
+                          ),
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                                RegExp(r'^\d*\.?\d{0,2}')),
+                          ],
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Por favor ingrese el descuento';
+                            }
+                            final discount = double.tryParse(value);
+                            if (discount == null) {
+                              return 'Por favor ingrese un número válido';
+                            }
+                            if (isPercentage &&
+                                (discount < 0 || discount > 100)) {
+                              return 'El porcentaje debe estar entre 0 y 100';
+                            }
+                            return null;
+                          },
+                        );
+                      }),
                       const SizedBox(height: 16),
                       Consumer<DiscountCalculatorProvider>(
-                        builder: (context, provider, child) {
-                          bool isPercentage = provider.discountType == DiscountType.percentage;
-                          return TextFormField(
-                            controller: _additionalDiscountController,
-                            decoration: InputDecoration(
-                              labelText: isPercentage ? 'Descuento Adicional Sucesivo (%)' : 'Descuento Adicional (\$)',
-                              prefixIcon: Icon(isPercentage ? Icons.percent : Icons.money_off),
-                              border: const OutlineInputBorder(),
-                              hintText: 'Opcional',
+                          builder: (context, provider, child) {
+                        bool isPercentage =
+                            provider.discountType == DiscountType.percentage;
+                        return TextFormField(
+                          controller: _additionalDiscountController,
+                          decoration: InputDecoration(
+                            labelText: isPercentage
+                                ? 'Descuento Adicional Sucesivo (%)'
+                                : 'Descuento Adicional (\$)',
+                            prefixIcon: Icon(
+                                isPercentage ? Icons.percent : Icons.money_off),
+                            suffixIcon: _buildClearFieldButton(
+                              _additionalDiscountController,
                             ),
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
-                            ],
-                          );
-                        }
-                      ),
+                            hintText: 'Opcional',
+                          ),
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                                RegExp(r'^\d*\.?\d{0,2}')),
+                          ],
+                        );
+                      }),
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: _taxController,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Impuestos / IVA (%) (Opcional)',
-                          prefixIcon: Icon(Icons.account_balance),
-                          border: OutlineInputBorder(),
+                          prefixIcon: const Icon(Icons.account_balance),
+                          suffixIcon: _buildClearFieldButton(_taxController),
                         ),
                         keyboardType: TextInputType.number,
                         inputFormatters: [
-                          FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+                          FilteringTextInputFormatter.allow(
+                              RegExp(r'^\d*\.?\d{0,2}')),
                         ],
                       ),
                     ],
@@ -225,14 +252,16 @@ class _ScreenOneState extends State<ScreenOne> {
                         padding: const EdgeInsets.all(16.0),
                         child: Text(
                           provider.errorMessage!,
-                          style: TextStyle(color: Theme.of(context).colorScheme.error),
+                          style: TextStyle(
+                              color: Theme.of(context).colorScheme.error),
                           textAlign: TextAlign.center,
                         ),
                       ),
                     );
                   }
-                  
-                  if (provider.finalPrice != null && provider.savedAmount != null) {
+
+                  if (provider.finalPrice != null &&
+                      provider.savedAmount != null) {
                     return Card(
                       elevation: 4,
                       color: Theme.of(context).colorScheme.primaryContainer,
@@ -243,25 +272,36 @@ class _ScreenOneState extends State<ScreenOne> {
                           children: [
                             Text(
                               'Resumen del Descuento',
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleLarge
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                               textAlign: TextAlign.center,
                             ),
                             const Divider(),
-                            _buildResultRow('Precio Original:', provider.originalPrice ?? 0.0),
-                            _buildResultRow('Total Ahorrado:', provider.savedAmount!, color: Colors.green),
+                            _buildResultRow('Precio Original:',
+                                provider.originalPrice ?? 0.0),
+                            _buildResultRow(
+                                'Total Ahorrado:', provider.savedAmount!,
+                                color: Theme.of(context).colorScheme.primary),
                             if (provider.taxAmount! > 0) ...[
                               _buildResultRow('Subtotal:', provider.subtotal!),
-                              _buildResultRow('Impuestos:', provider.taxAmount!, color: Colors.redAccent),
+                              _buildResultRow('Impuestos:', provider.taxAmount!,
+                                  color: Theme.of(context).colorScheme.error),
                             ],
                             const Divider(),
                             Text(
                               'Precio Final a Pagar: ${_formatCurrency(provider.finalPrice!)}',
-                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                color: Theme.of(context).colorScheme.primary,
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .headlineSmall
+                                  ?.copyWith(
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                               textAlign: TextAlign.center,
                             ),
                           ],
@@ -285,13 +325,33 @@ class _ScreenOneState extends State<ScreenOne> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 16)),
-          Text(
-            (color == Colors.green ? '-' : '') + _formatCurrency(value),
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: color),
+          Expanded(
+            child: Text(label, style: const TextStyle(fontSize: 16)),
+          ),
+          const SizedBox(width: 12),
+          Flexible(
+            child: Text(
+              (color == Theme.of(context).colorScheme.primary ? '-' : '') +
+                  _formatCurrency(value),
+              textAlign: TextAlign.right,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                  fontSize: 16, fontWeight: FontWeight.w600, color: color),
+            ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildClearFieldButton(TextEditingController controller) {
+    return IconButton(
+      tooltip: 'Limpiar campo',
+      icon: const Icon(Icons.close_rounded, size: 18),
+      onPressed: () {
+        controller.clear();
+        setState(() {});
+      },
     );
   }
 }

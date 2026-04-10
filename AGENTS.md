@@ -29,6 +29,7 @@ Use the smallest path that solves the task.
 ## Routing Map
 
 - UI/screens/widgets -> `@ui-ux-agent` and/or `provider-state-skill`
+- Design system/theming/component consistency -> `design-system-skill` (preferred first for UI refactors)
 - Math formulas/precision/input validation -> `math-precision-skill` (mandatory)
 - Tests/coverage/test fixes -> `@qa-integration-agent`
 - Android/iOS build, CI/CD, GitHub Actions -> `@devops-agent`
@@ -43,6 +44,7 @@ Do not duplicate long rulebooks here. Use:
 
 - `.opencode/skills/clean-architecture-skill.md`
 - `.opencode/skills/provider-state-skill.md`
+- `.opencode/skills/design-system-skill.md`
 - `.opencode/skills/math-precision-skill.md`
 - `.opencode/skills/devsecops-workflow-skill.md`
 - `.opencode/skills/git-ops-skill.md`
