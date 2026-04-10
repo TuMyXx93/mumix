@@ -91,16 +91,14 @@ class _MyHomePageState extends State<MyHomePage> {
       body: LayoutBuilder(
         builder: (context, constraints) {
           final width = constraints.maxWidth;
+          final textScale =
+              MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 1.5);
           final crossAxisCount = width >= 1100
               ? 3
               : width >= 700
                   ? 2
                   : 1;
-          final childAspectRatio = crossAxisCount == 1
-              ? 2.2
-              : crossAxisCount == 2
-                  ? 1.5
-                  : 1.3;
+          final mainAxisExtent = 124 + ((textScale - 1.0) * 48);
 
           return CustomScrollView(
             slivers: [
@@ -134,7 +132,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     crossAxisCount: crossAxisCount,
                     crossAxisSpacing: 14,
                     mainAxisSpacing: 14,
-                    childAspectRatio: childAspectRatio,
+                    mainAxisExtent: mainAxisExtent,
                   ),
                   itemCount: menuItems.length,
                   itemBuilder: (context, index) {
@@ -192,7 +190,7 @@ class _DashboardMenuCardState extends State<_DashboardMenuCard> {
           child: InkWell(
             onTap: widget.onTap,
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               child: Row(
                 children: [
                   Container(
@@ -210,24 +208,27 @@ class _DashboardMenuCardState extends State<_DashboardMenuCard> {
                   const SizedBox(width: 14),
                   Expanded(
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           widget.title,
-                          maxLines: 2,
+                          maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          widget.subtitle,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
+                        const SizedBox(height: 2),
+                        Flexible(
+                          child: Text(
+                            widget.subtitle,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ),
                       ],

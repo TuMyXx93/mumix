@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../../../core/utils/debouncer.dart';
 import '../providers/sales_price_provider.dart';
 
 class SalesPriceCalculatorScreen extends StatefulWidget {
@@ -14,8 +15,8 @@ class SalesPriceCalculatorScreen extends StatefulWidget {
 
 class _SalesPriceCalculatorScreenState
     extends State<SalesPriceCalculatorScreen> {
+  final _inputDebouncer = Debouncer(delay: const Duration(milliseconds: 350));
   final _currencyFormat = NumberFormat.currency(symbol: r'$', decimalDigits: 2);
-  final _formKey = GlobalKey<FormState>();
   final _costController = TextEditingController();
   final _profitController = TextEditingController();
   final _taxController = TextEditingController();
@@ -23,6 +24,9 @@ class _SalesPriceCalculatorScreenState
   @override
   void initState() {
     super.initState();
+    _costController.addListener(_onInputChanged);
+    _profitController.addListener(_onInputChanged);
+    _taxController.addListener(_onInputChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = context.read<SalesPriceProvider>();
       if (provider.costInput.isNotEmpty) {
@@ -33,14 +37,16 @@ class _SalesPriceCalculatorScreenState
     });
   }
 
+  void _onInputChanged() {
+    _inputDebouncer.run(_calculateSalePrice);
+  }
+
   void _calculateSalePrice() {
-    if (_formKey.currentState!.validate()) {
-      context.read<SalesPriceProvider>().calculatePrice(
-            costStr: _costController.text,
-            profitPercentStr: _profitController.text,
-            taxStr: _taxController.text,
-          );
-    }
+    context.read<SalesPriceProvider>().calculatePrice(
+          costStr: _costController.text,
+          profitPercentStr: _profitController.text,
+          taxStr: _taxController.text,
+        );
   }
 
   String _formatCurrency(double value) {
@@ -49,6 +55,10 @@ class _SalesPriceCalculatorScreenState
 
   @override
   void dispose() {
+    _costController.removeListener(_onInputChanged);
+    _profitController.removeListener(_onInputChanged);
+    _taxController.removeListener(_onInputChanged);
+    _inputDebouncer.dispose();
     _costController.dispose();
     _profitController.dispose();
     _taxController.dispose();
@@ -74,190 +84,183 @@ class _SalesPriceCalculatorScreenState
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Tipo de Margen Toggle
-              Consumer<SalesPriceProvider>(builder: (context, provider, child) {
-                return Card(
-                  elevation: 2,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: Wrap(
-                      alignment: WrapAlignment.center,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        const Text('Sobre Costo', textAlign: TextAlign.center),
-                        Switch(
-                          value: provider.marginType == MarginType.margin,
-                          onChanged: (value) {
-                            provider.setMarginType(
-                              value ? MarginType.margin : MarginType.markup,
-                            );
-                            if (_costController.text.isNotEmpty &&
-                                _profitController.text.isNotEmpty) {
-                              _calculateSalePrice();
-                            }
-                          },
-                        ),
-                        const Text('Sobre Venta (Pro)',
-                            textAlign: TextAlign.center),
-                      ],
-                    ),
-                  ),
-                );
-              }),
-              const SizedBox(height: 16),
-              Card(
-                elevation: 4,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Tipo de Margen Toggle
+            Consumer<SalesPriceProvider>(builder: (context, provider, child) {
+              return Card(
+                elevation: 2,
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Wrap(
+                    alignment: WrapAlignment.center,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
-                      TextFormField(
-                        controller: _costController,
-                        decoration: InputDecoration(
-                          labelText: 'Costo Base del Producto',
-                          prefixIcon: const Icon(Icons.inventory),
-                          suffixIcon: _buildClearFieldButton(_costController),
-                        ),
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.allow(
-                              RegExp(r'^\d*\.?\d{0,2}')),
-                        ],
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Por favor ingrese el costo';
+                      const Text('Sobre Costo', textAlign: TextAlign.center),
+                      Switch(
+                        value: provider.marginType == MarginType.margin,
+                        onChanged: (value) {
+                          provider.setMarginType(
+                            value ? MarginType.margin : MarginType.markup,
+                          );
+                          if (_costController.text.isNotEmpty &&
+                              _profitController.text.isNotEmpty) {
+                            _onInputChanged();
                           }
-                          if (double.tryParse(value) == null) {
-                            return 'Costo inválido';
-                          }
-                          return null;
                         },
                       ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _profitController,
-                        decoration: InputDecoration(
-                          labelText: 'Porcentaje de Ganancia (%)',
-                          prefixIcon: const Icon(Icons.trending_up),
-                          suffixIcon: _buildClearFieldButton(_profitController),
-                        ),
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.allow(
-                              RegExp(r'^\d*\.?\d{0,2}')),
-                        ],
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Por favor ingrese el porcentaje';
-                          }
-                          if (double.tryParse(value) == null) {
-                            return 'Porcentaje inválido';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _taxController,
-                        decoration: InputDecoration(
-                          labelText: 'Impuestos / IVA (%) (Opcional)',
-                          prefixIcon: const Icon(Icons.account_balance),
-                          suffixIcon: _buildClearFieldButton(_taxController),
-                        ),
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.allow(
-                              RegExp(r'^\d*\.?\d{0,2}')),
-                        ],
-                      ),
+                      const Text('Sobre Venta (Pro)',
+                          textAlign: TextAlign.center),
                     ],
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: _calculateSalePrice,
-                icon: const Icon(Icons.calculate),
-                label: const Text('Calcular'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.all(16),
+              );
+            }),
+            const SizedBox(height: 16),
+            Card(
+              elevation: 4,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: _costController,
+                      decoration: InputDecoration(
+                        labelText: 'Costo Base del Producto',
+                        prefixIcon: const Icon(Icons.inventory),
+                        suffixIcon: _buildClearFieldButton(_costController),
+                      ),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                            RegExp(r'^\d*\.?\d{0,2}')),
+                      ],
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor ingrese el costo';
+                        }
+                        if (double.tryParse(value) == null) {
+                          return 'Costo inválido';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _profitController,
+                      decoration: InputDecoration(
+                        labelText: 'Porcentaje de Ganancia (%)',
+                        prefixIcon: const Icon(Icons.trending_up),
+                        suffixIcon: _buildClearFieldButton(_profitController),
+                      ),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                            RegExp(r'^\d*\.?\d{0,2}')),
+                      ],
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor ingrese el porcentaje';
+                        }
+                        if (double.tryParse(value) == null) {
+                          return 'Porcentaje inválido';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _taxController,
+                      decoration: InputDecoration(
+                        labelText: 'Impuestos / IVA (%) (Opcional)',
+                        prefixIcon: const Icon(Icons.account_balance),
+                        suffixIcon: _buildClearFieldButton(_taxController),
+                      ),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                            RegExp(r'^\d*\.?\d{0,2}')),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 24),
-              Consumer<SalesPriceProvider>(
-                builder: (context, provider, child) {
-                  if (provider.errorMessage != null) {
-                    return Card(
-                      color: Theme.of(context).colorScheme.errorContainer,
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Text(
-                          provider.errorMessage!,
-                          style: TextStyle(
-                              color: Theme.of(context).colorScheme.error),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    );
-                  }
-
-                  if (provider.finalPrice != null) {
-                    return Card(
-                      elevation: 4,
-                      color: Theme.of(context).colorScheme.primaryContainer,
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Text(
-                              'Resumen Financiero',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleLarge
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+            ),
+            const SizedBox(height: 24),
+            Consumer<SalesPriceProvider>(
+              builder: (context, provider, child) {
+                return AnimatedSize(
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOut,
+                  child: Column(
+                    children: [
+                      if (provider.errorMessage != null)
+                        Card(
+                          color: Theme.of(context).colorScheme.errorContainer,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Text(
+                              provider.errorMessage!,
+                              style: TextStyle(
+                                  color: Theme.of(context).colorScheme.error),
                               textAlign: TextAlign.center,
                             ),
-                            const Divider(),
-                            _buildResultRow('Precio sin impuestos:',
-                                provider.baseSalePrice!),
-                            _buildResultRow(
-                                'Ganancia Neta:', provider.profitAmount!),
-                            if (provider.taxAmount! > 0)
-                              _buildResultRow(
-                                  'Impuestos:', provider.taxAmount!),
-                            const Divider(),
-                            Text(
-                              'Precio Final (Venta): ${_formatCurrency(provider.finalPrice!)}',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headlineSmall
-                                  ?.copyWith(
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
-                    );
-                  }
-                  return const SizedBox.shrink();
-                },
-              ),
-            ],
-          ),
+                      if (provider.finalPrice != null)
+                        Card(
+                          elevation: 4,
+                          color: Theme.of(context).colorScheme.primaryContainer,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Text(
+                                  'Resumen Financiero',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleLarge
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const Divider(),
+                                _buildResultRow('Precio sin impuestos:',
+                                    provider.baseSalePrice!),
+                                _buildResultRow(
+                                    'Ganancia Neta:', provider.profitAmount!),
+                                if (provider.taxAmount! > 0)
+                                  _buildResultRow(
+                                      'Impuestos:', provider.taxAmount!),
+                                const Divider(),
+                                Text(
+                                  'Precio Final (Venta): ${_formatCurrency(provider.finalPrice!)}',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineSmall
+                                      ?.copyWith(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ],
         ),
       ),
     );
@@ -292,7 +295,7 @@ class _SalesPriceCalculatorScreenState
       icon: const Icon(Icons.close_rounded, size: 18),
       onPressed: () {
         controller.clear();
-        setState(() {});
+        _onInputChanged();
       },
     );
   }

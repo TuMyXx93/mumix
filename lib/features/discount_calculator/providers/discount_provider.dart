@@ -22,7 +22,7 @@ class DiscountCalculatorProvider extends ChangeNotifier {
   String _primaryDiscountInput = '';
   String _additionalDiscountInput = '';
   String _taxInput = '';
-  
+
   // Parsed Original Price for UI
   double? _originalPrice;
 
@@ -37,7 +37,7 @@ class DiscountCalculatorProvider extends ChangeNotifier {
   double? get taxAmount => _taxAmount;
   String? get errorMessage => _errorMessage;
   DiscountType get discountType => _discountType;
-  
+
   String get originalPriceInput => _originalPriceInput;
   String get primaryDiscountInput => _primaryDiscountInput;
   String get additionalDiscountInput => _additionalDiscountInput;
@@ -50,7 +50,8 @@ class DiscountCalculatorProvider extends ChangeNotifier {
     _additionalDiscountInput = _prefs.getString('disc_add') ?? '';
     _taxInput = _prefs.getString('disc_tax') ?? '';
     final typeIndex = _prefs.getInt('disc_type') ?? 0;
-    _discountType = typeIndex == 0 ? DiscountType.percentage : DiscountType.fixedAmount;
+    _discountType =
+        typeIndex == 0 ? DiscountType.percentage : DiscountType.fixedAmount;
 
     if (_originalPriceInput.isNotEmpty && _primaryDiscountInput.isNotEmpty) {
       _calculateInternal();
@@ -85,19 +86,34 @@ class DiscountCalculatorProvider extends ChangeNotifier {
   void _calculateInternal() {
     _errorMessage = null;
 
+    if (_originalPriceInput.trim().isEmpty ||
+        _primaryDiscountInput.trim().isEmpty) {
+      _clearResults();
+      notifyListeners();
+      return;
+    }
+
     final origPrice = double.tryParse(_originalPriceInput);
     final primaryDiscount = double.tryParse(_primaryDiscountInput);
-    final additionalDiscount = _additionalDiscountInput.isEmpty ? 0.0 : double.tryParse(_additionalDiscountInput);
+    final additionalDiscount = _additionalDiscountInput.isEmpty
+        ? 0.0
+        : double.tryParse(_additionalDiscountInput);
     final taxPercent = _taxInput.isEmpty ? 0.0 : double.tryParse(_taxInput);
 
-    if (origPrice == null || primaryDiscount == null || additionalDiscount == null || taxPercent == null) {
+    if (origPrice == null ||
+        primaryDiscount == null ||
+        additionalDiscount == null ||
+        taxPercent == null) {
       _errorMessage = "Valores numéricos inválidos";
       _clearResults();
       notifyListeners();
       return;
     }
 
-    if (origPrice < 0 || primaryDiscount < 0 || additionalDiscount < 0 || taxPercent < 0) {
+    if (origPrice < 0 ||
+        primaryDiscount < 0 ||
+        additionalDiscount < 0 ||
+        taxPercent < 0) {
       _errorMessage = "Los valores no pueden ser negativos";
       _clearResults();
       notifyListeners();
@@ -159,12 +175,12 @@ class DiscountCalculatorProvider extends ChangeNotifier {
     _primaryDiscountInput = '';
     _additionalDiscountInput = '';
     _taxInput = '';
-    
+
     _prefs.remove('disc_orig');
     _prefs.remove('disc_pri');
     _prefs.remove('disc_add');
     _prefs.remove('disc_tax');
-    
+
     _clearResults();
     _errorMessage = null;
     notifyListeners();

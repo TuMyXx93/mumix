@@ -35,7 +35,8 @@ void main() {
 
     test('Calculates Markup correctly with tax', () {
       // Cost: 100, Profit: 20%, Tax: 10%
-      provider.calculatePrice(costStr: '100', profitPercentStr: '20', taxStr: '10');
+      provider.calculatePrice(
+          costStr: '100', profitPercentStr: '20', taxStr: '10');
 
       expect(provider.errorMessage, isNull);
       expect(provider.profitAmount, 20.0);
@@ -60,7 +61,8 @@ void main() {
       provider.setMarginType(MarginType.margin);
       provider.calculatePrice(costStr: '100', profitPercentStr: '100');
 
-      expect(provider.errorMessage, 'El margen sobre venta debe ser menor a 100%');
+      expect(
+          provider.errorMessage, 'El margen sobre venta debe ser menor a 100%');
       expect(provider.finalPrice, isNull);
     });
 
@@ -74,21 +76,29 @@ void main() {
       expect(provider.errorMessage, 'Los valores no pueden ser negativos');
     });
 
+    test('Empty required inputs clear results without error', () {
+      provider.calculatePrice(costStr: '100', profitPercentStr: '20');
+      expect(provider.finalPrice, 120.0);
+
+      provider.calculatePrice(costStr: '', profitPercentStr: '20');
+
+      expect(provider.errorMessage, isNull);
+      expect(provider.finalPrice, isNull);
+      expect(provider.baseSalePrice, isNull);
+    });
+
     test('Clears correctly', () {
       provider.calculatePrice(costStr: '100', profitPercentStr: '20');
       provider.clear();
       expect(provider.finalPrice, isNull);
       expect(provider.errorMessage, isNull);
     });
-    
+
     test('Persists and loads data from SharedPreferences', () async {
-      provider.calculatePrice(
-        costStr: '100', 
-        profitPercentStr: '20'
-      );
-      
+      provider.calculatePrice(costStr: '100', profitPercentStr: '20');
+
       final newProvider = SalesPriceProvider(prefs);
-      
+
       expect(newProvider.costInput, '100');
       expect(newProvider.profitPercentInput, '20');
       expect(newProvider.finalPrice, 120.0);

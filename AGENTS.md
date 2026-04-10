@@ -17,6 +17,7 @@ operational. Put deep implementation details in `.opencode/skills/*`.
 3. If gate has warnings, report and require user confirmation.
 4. Never put business logic in widgets.
 5. `lib/core/` must not import `lib/features/`.
+6. Do not change existing UI layout/spacing unless explicitly requested.
 
 ## Fast Dispatch
 
@@ -31,7 +32,7 @@ Use the smallest path that solves the task.
 - UI/screens/widgets -> `@ui-ux-agent` and/or `provider-state-skill`
 - Design system/theming/component consistency -> `design-system-skill` (preferred first for UI refactors)
 - Math formulas/precision/input validation -> `math-precision-skill` (mandatory)
-- Tests/coverage/test fixes -> `@qa-integration-agent`
+- Tests/coverage/test fixes -> `@qa-integration-agent` (refer to `testing-qa-skill.md`)
 - Android/iOS build, CI/CD, GitHub Actions -> `@devops-agent`
 - Play Store release/signing/proguard -> `@play-store-architect-agent`
 - Docs/changelog/commentary -> `@tech-writer-agent`
@@ -45,6 +46,7 @@ Do not duplicate long rulebooks here. Use:
 - `.opencode/skills/clean-architecture-skill.md`
 - `.opencode/skills/provider-state-skill.md`
 - `.opencode/skills/design-system-skill.md`
+- `.opencode/skills/testing-qa-skill.md`
 - `.opencode/skills/math-precision-skill.md`
 - `.opencode/skills/devsecops-workflow-skill.md`
 - `.opencode/skills/git-ops-skill.md`
