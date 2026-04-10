@@ -1,4 +1,4 @@
-/// App-wide theme provider that persists the current light/dark selection.
+// App-wide theme provider that persists the current light/dark selection.
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

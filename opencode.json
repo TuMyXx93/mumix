@@ -24,6 +24,7 @@
       "command": [
         "C:\\Users\\HACKTU\\go\\bin\\engram.exe",
         "mcp",
+        "--project=numix",
         "--tools=agent"
       ],
       "enabled": true
