@@ -68,7 +68,11 @@ Do not duplicate long rulebooks here. Use:
 Engram is mandatory in this project.
 
 - Session start/after compaction: run `mem_context`; use `mem_search` if needed.
+- For recall/research, use progressive disclosure: `mem_search` -> `mem_timeline` -> `mem_get_observation`.
+- Save user intent for key requests with `mem_save_prompt` (especially release, architecture, and policy decisions).
 - After meaningful work: save with `mem_save` (`bugfix`, `architecture`, `pattern`, `config`, `discovery`).
+- For token-efficient capture, include `## Key Learnings:` bullets and persist with `mem_capture_passive` when appropriate.
+- Wrap sensitive snippets in `<private>...</private>` before memory save to enforce redaction.
 - Before ending: always run `mem_session_summary` with Goal, Instructions,
   Discoveries, Accomplished, Next Steps, Relevant Files.
 

@@ -57,3 +57,6 @@ ImagesErrors/
 
 # OpenCode
 .opencode/node_modules/
+
+# Engram local database (shared chunks can be committed separately)
+.engram/engram.db
