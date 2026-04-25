@@ -65,18 +65,82 @@ Do not duplicate long rulebooks here. Use:
 
 ## Memory Protocol (Engram)
 
-Engram is mandatory in this project.
+Engram is mandatory in this project. All memory tools use MCP via the Engram binary configured in `opencode.json`.
 
-- Session start/after compaction: run `mem_context`; use `mem_search` if needed.
-- For recall/research, use progressive disclosure: `mem_search` -> `mem_timeline` -> `mem_get_observation`.
-- Save user intent for key requests with `mem_save_prompt` (especially release, architecture, and policy decisions).
-- After meaningful work: save with `mem_save` (`bugfix`, `architecture`, `pattern`, `config`, `discovery`).
-- For token-efficient capture, include `## Key Learnings:` bullets and persist with `mem_capture_passive` when appropriate.
-- Wrap sensitive snippets in `<private>...</private>` before memory save to enforce redaction.
-- Before ending: always run `mem_session_summary` with Goal, Instructions,
-  Discoveries, Accomplished, Next Steps, Relevant Files.
+### Session Start Protocol
 
-Recommended topic keys:
+1. **First call**: `mem_current_project` — confirm which project Engram detected before writing.
+2. **After compaction**: Call `mem_session_summary` with compacted content first, then `mem_context`.
+
+### Recall Protocol
+
+Progressive disclosure for research/recall: `mem_search` → `mem_timeline` → `mem_get_observation`.
+
+### Save Protocol (When)
+
+Call `mem_save` immediately after:
+- Bug fix completed
+- Architecture or design decision made
+- Non-obvious discovery about the codebase
+- Configuration change or environment setup
+- Pattern established (naming, structure, convention)
+- User preference or constraint learned
+
+### Save Protocol (Format)
+
+```
+**title**: Verb + what — short, searchable (e.g. "Fixed N+1 query in UserList")
+**type**: bugfix | decision | architecture | discovery | pattern | config | preference | learning
+**scope**: project (default) | personal
+**topic_key** (optional): stable key for evolving topics — call `mem_suggest_topic_key` first if unsure
+**content**:
+  **What**: One sentence — what was done
+  **Why**: What motivated it (user request, bug, performance, etc.)
+  **Where**: Files or paths affected
+  **Learned**: Gotchas, edge cases, things that surprised you (omit if none)
+```
+
+**Note**: Project is auto-detected from the server's working directory. Do NOT pass `project` to write tools — it is silently discarded.
+
+### Topic Update Rules
+
+- Different topics must not overwrite each other
+- Reuse the same `topic_key` to update an evolving topic instead of creating a new observation
+- Use `mem_update` when correcting an existing observation by ID
+
+### User Prompts
+
+Save user intent with `mem_save_prompt` for key requests (especially release, architecture, and policy decisions).
+
+### Passive Capture
+
+Include `## Key Learnings:` bullets in responses. Use `mem_capture_passive` to extract structured learnings automatically. Duplicates are skipped.
+
+### Session Close Protocol (Mandatory)
+
+Before ending: always `mem_session_summary` with:
+
+```
+## Goal
+[What we were working on this session]
+
+## Instructions
+[User preferences or constraints discovered — skip if none]
+
+## Discoveries
+- [Technical findings, gotchas, non-obvious learnings]
+
+## Accomplished
+- [Completed items with key details]
+
+## Next Steps
+- [What remains to be done — for the next session]
+
+## Relevant Files
+- path/to/file — [what it does or what changed]
+```
+
+### Recommended Topic Keys
 
 - `architecture/feature-first`
 - `architecture/provider-model`
