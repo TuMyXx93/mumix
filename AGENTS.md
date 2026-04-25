@@ -1,150 +1,164 @@
 # AGENTS.md - Numix Orchestrator
 
-Lean orchestrator for AI coding agents in this repo. Keep this file short and
-operational. Put deep implementation details in `.opencode/skills/*`.
+This file is the source of truth for AI-assisted work. Keep it concise — detailed protocols live in specialized files and Engram memory.
 
-## Project Scope
+Research-backed: The "evaluando-agents" study (ETH Zurich, 2026) shows context files reduce task success and increase cost 20%+ when verbose. Keep requirements minimal.
 
-- Flutter app for commercial math calculations (pricing, discounts, margins).
-- Stack: Flutter + Dart, `provider`, `shared_preferences`.
-- Architecture: Feature-First (`lib/features/`) + shared core (`lib/core/`).
-- Branching: active development on `dev`, stable releases to `main`.
+## Project Overview
 
-## Non-Negotiables
+Flutter app for commercial math calculations (pricing, discounts, margins).
+Stack: Flutter 3.27+ / Dart 3.7+ / provider / shared_preferences.
+Architecture: Feature-First (`lib/features/`) + shared core (`lib/core/`).
+Deployment: Play Store (Android), future iOS.
 
-1. Before any code-modifying task, run `/version-gate`.
-2. If gate has blockers, stop and report.
-3. If gate has warnings, report and require user confirmation.
-4. Never put business logic in widgets.
-5. `lib/core/` must not import `lib/features/`.
-6. Do not change existing UI layout/spacing unless explicitly requested.
+## Branch Policy
 
-## Fast Dispatch
+- `dev`: development (all work starts here)
+- `main`: stable production branch
 
-Use the smallest path that solves the task.
+**Rules**: Implement in `dev` or feature branches. Merge to `main` only after validations pass.
 
-1. Run gate (`/version-gate`).
-2. Load only required skill(s), do not preload all skills.
-3. Route to a specialized agent only when needed.
+## Validation Commands
 
-## Routing Map
+See `.opencode/commands/` for specs:
 
-- UI/screens/widgets -> `@ui-ux-agent` and/or `provider-state-skill`
-- Design system/theming/component consistency -> `design-system-skill` (preferred first for UI refactors)
-- Math formulas/precision/input validation -> `math-precision-skill` (mandatory)
-- Tests/coverage/test fixes -> `@qa-integration-agent` (refer to `testing-qa-skill.md`)
-- Android/iOS build, CI/CD, GitHub Actions -> `@devops-agent`
-- Play Store release/signing/proguard -> `@play-store-architect-agent`
-- Docs/changelog/commentary -> `@tech-writer-agent`
-- Architecture/scaffolding -> `clean-architecture-skill`
-- Commit/version/release flow -> `git-ops-skill` (use `@devops-agent` for release tags)
+- `/version-gate` — branch check + flutter analyze + flutter test + flutter build apk --debug
+- `/verify-math` — flutter analyze + flutter test test/features/
+- `/audit-orchestrator` — consistency audit for AGENTS, agents, skills, commands
 
-## Skills As Source of Detail
+## Architecture Rules
 
-Do not duplicate long rulebooks here. Use:
+- `lib/features/`: feature modules (screens, providers, models)
+- `lib/core/`: shared utilities, themes, constants
+- `lib/core/` must NOT import `lib/features/`
+- Business logic lives in providers, never in widgets
 
-- `.opencode/skills/clean-architecture-skill.md`
-- `.opencode/skills/provider-state-skill.md`
-- `.opencode/skills/design-system-skill.md`
-- `.opencode/skills/testing-qa-skill.md`
-- `.opencode/skills/math-precision-skill.md`
-- `.opencode/skills/devsecops-workflow-skill.md`
-- `.opencode/skills/git-ops-skill.md`
+## Pre-Task Gate
 
-## Commands
+Before code modifications, run `/version-gate`.
 
-- `/verify-math`: run `flutter analyze` + `flutter test test/features/`
-- `/version-gate`: pre-task repository safety validation
-- `/version-bump <patch|minor|major>`: version bump + changelog + tag
+- FAIL: stop and fix blockers
+- PASS WITH WARNINGS: proceed with caution and report risks
+- PASS: implement directly
 
-## Quality Gates
+## Agent System
 
-- Required before push: `flutter analyze` and `flutter test`
-- Keep formatting with `dart format lib/`
-- Avoid `// ignore:` unless justified in writing
+Assets live in `.opencode/`.
 
-## Memory Protocol (Engram)
+### Agents
 
-Engram is mandatory in this project. All memory tools use MCP via the Engram binary configured in `opencode.json`.
+| Agent                       | Role                                                    |
+| --------------------------- | ------------------------------------------------------- |
+| `ui-ux-agent`               | Flutter UI, Material 3, animations, accessibility        |
+| `qa-integration-agent`      | Tests, coverage, quality regressions                    |
+| `devops-agent`              | Android/iOS build, CI/CD, native tooling                |
+| `play-store-architect-agent` | Play Store releases, signing, AAB, proguard             |
+| `tech-writer-agent`         | docs, changelog, README                                 |
 
-### Session Start Protocol
+Each agent must return: Scope touched, Decisions made, Risks and follow-up actions, Memory saves triggered.
 
-1. **First call**: `mem_current_project` — confirm which project Engram detected before writing.
-2. **After compaction**: Call `mem_session_summary` with compacted content first, then `mem_context`.
+See `.opencode/agents/` for guidelines per agent.
 
-### Recall Protocol
+### Commands
 
-Progressive disclosure for research/recall: `mem_search` → `mem_timeline` → `mem_get_observation`.
+| Command                      | Purpose                                              |
+| ---------------------------- | ---------------------------------------------------- |
+| `/version-gate`              | Pre-task: branch + analyze + test + build            |
+| `/verify-math`               | Math validation: analyze + feature tests              |
+| `/version-bump <patch\|major\|minor>` | Release workflow                            |
+| `/audit-orchestrator`        | Consistency audit for orchestrator files             |
+| `/engram-status`             | Memory health and project hygiene                    |
 
-### Save Protocol (When)
+See `.opencode/commands/` for action specs.
 
-Call `mem_save` immediately after:
-- Bug fix completed
-- Architecture or design decision made
-- Non-obvious discovery about the codebase
-- Configuration change or environment setup
-- Pattern established (naming, structure, convention)
-- User preference or constraint learned
+### Skills
 
-### Save Protocol (Format)
+- `clean-architecture-skill`
+- `provider-state-skill`
+- `design-system-skill`
+- `testing-qa-skill`
+- `math-precision-skill`
+- `git-ops-skill`
+- `devsecops-workflow-skill`
 
+See `.opencode/skills/` for detailed rules.
+
+## Dispatch Order
+
+1. Run `/version-gate` for code edits
+2. UI/layout/animation → `ui-ux-agent`
+3. Math/precision → `math-precision-skill` (mandatory)
+4. Tests/quality → `qa-integration-agent`
+5. Build/CI → `devops-agent`
+6. Play Store → `play-store-architect-agent`
+7. Docs → `tech-writer-agent`
+
+## MCP and Memory
+
+### MCP Tools
+
+**context7**: Dependency/framework documentation resolver. Use to fetch up-to-date library docs.
+
+**engram**: Persistent memory system for AI coding agents. 16 tools available:
+
+| Category          | Tools                                                                                              |
+| ----------------- | -------------------------------------------------------------------------------------------------- |
+| Save & Update     | `mem_save`, `mem_update`, `mem_delete`, `mem_suggest_topic_key`                                    |
+| Search & Retrieve | `mem_search`, `mem_context`, `mem_timeline`, `mem_get_observation`                                 |
+| Session Lifecycle | `mem_session_start`, `mem_session_end`, `mem_session_summary`                                      |
+| Utilities         | `mem_save_prompt`, `mem_stats`, `mem_capture_passive`, `mem_merge_projects`, `mem_current_project` |
+
+### Engram Cloud (opt-in — documentation only, pending server)
+
+Background push/pull replication for multi-machine sync.
+
+**Enable autosync** (all three env vars required, when server available):
 ```
-**title**: Verb + what — short, searchable (e.g. "Fixed N+1 query in UserList")
-**type**: bugfix | decision | architecture | discovery | pattern | config | preference | learning
-**scope**: project (default) | personal
-**topic_key** (optional): stable key for evolving topics — call `mem_suggest_topic_key` first if unsure
-**content**:
-  **What**: One sentence — what was done
-  **Why**: What motivated it (user request, bug, performance, etc.)
-  **Where**: Files or paths affected
-  **Learned**: Gotchas, edge cases, things that surprised you (omit if none)
-```
-
-**Note**: Project is auto-detected from the server's working directory. Do NOT pass `project` to write tools — it is silently discarded.
-
-### Topic Update Rules
-
-- Different topics must not overwrite each other
-- Reuse the same `topic_key` to update an evolving topic instead of creating a new observation
-- Use `mem_update` when correcting an existing observation by ID
-
-### User Prompts
-
-Save user intent with `mem_save_prompt` for key requests (especially release, architecture, and policy decisions).
-
-### Passive Capture
-
-Include `## Key Learnings:` bullets in responses. Use `mem_capture_passive` to extract structured learnings automatically. Duplicates are skipped.
-
-### Session Close Protocol (Mandatory)
-
-Before ending: always `mem_session_summary` with:
-
-```
-## Goal
-[What we were working on this session]
-
-## Instructions
-[User preferences or constraints discovered — skip if none]
-
-## Discoveries
-- [Technical findings, gotchas, non-obvious learnings]
-
-## Accomplished
-- [Completed items with key details]
-
-## Next Steps
-- [What remains to be done — for the next session]
-
-## Relevant Files
-- path/to/file — [what it does or what changed]
+ENGRAM_CLOUD_AUTOSYNC=1
+ENGRAM_CLOUD_TOKEN=<token>
+ENGRAM_CLOUD_SERVER=<url>
 ```
 
-### Recommended Topic Keys
+**CLI commands** (for when server is configured):
+```
+engram cloud config --server <url>      # configure cloud endpoint
+engram cloud enroll <project>           # enroll project for cloud sync
+engram cloud upgrade doctor --project <name>   # readiness diagnosis
+engram cloud upgrade repair --project <name>   # repair planner/apply
+engram cloud upgrade bootstrap --project <name> # resumable enroll/push/verify
+engram cloud upgrade status --project <name>   # show stage/class/reason
+engram projects list|consolidate|prune       # project hygiene
+```
 
-- `architecture/feature-first`
-- `architecture/provider-model`
-- `pattern/math-formulas`
-- `pattern/widget-conventions`
-- `config/pubspec`
-- `config/android-build`
+**Status reason codes**: `blocked_unenrolled`, `auth_required`, `cloud_config_error`, `policy_forbidden`, `paused`, `transport_failed`
+
+**Current status**: Cloud NOT configured. Pending: Docker + Postgres server setup.
+
+### Memory Protocol
+
+Detailed protocol stored in Engram — retrieve via `mem_context` on session start. Key rules:
+
+**When to Save**: Call `mem_save` immediately after bug fix, architecture decision, non-obvious discovery, config change, pattern established, or user preference learned.
+
+**When to Search**: When user asks to recall ("remember", "recall", "what did we do") or proactively when starting work on something potentially done before.
+
+**Session Close Protocol**: Before ending a session, call `mem_session_summary`. After compaction, call `mem_session_summary` immediately then `mem_context` to recover.
+
+**Passive Capture**: Include `## Key Learnings:` section in responses — Engram auto-extracts numbered items.
+
+**Project Hygiene**: All project names normalized (lowercase, trim, collapse). Use `mem_merge_projects` to consolidate variants. Run `engram projects list` periodically.
+
+### PDF Documentation Pipeline
+
+When encountering PDF documentation during research, chain the PDF parser tools with Engram memory:
+
+1. `pdf_parser_analyze_pdf_to_markdown` — convert PDF to searchable markdown
+2. `pdf_parser_extract_pdf_metadata` — extract metadata for indexing context
+3. `pdf_parser_extract_figures` — extract embedded figures as base64 for vision LLMs
+4. Save key learnings as observations via `mem_save` or `mem_capture_passive`
+
+Query via `mem_search` when needed.
+
+## Save Notable Decisions
+
+Save bugfixes, architecture decisions, and config changes as memory immediately after completing them.

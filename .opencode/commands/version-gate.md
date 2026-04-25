@@ -1,22 +1,11 @@
 # Version Gate Command
 
-**Alias**: `/version-gate`
+Alias: `/version-gate`
 
-**Action**:
-When invoked, run a pre-task repository safety gate and report one of:
-- `BLOCKERS` (stop work)
-- `WARNINGS` (require user confirmation)
-- `CLEAN` (proceed)
-
-Checks:
-1. Verify current branch is not `main` for normal development.
-2. Verify git remote has no embedded credentials.
-3. Verify no merge conflict markers exist in tracked files.
-4. Run `flutter analyze`.
-5. Run `flutter test test/features/`.
-
-Output format:
-- Gate status
-- Blockers list
-- Warnings list
-- Recommended next action
+Action:
+1. Verify branch with `git branch --show-current`
+2. If branch is `main`, block non-hotfix code changes
+3. Run: `flutter analyze`
+4. Run: `flutter test test/features/`
+5. Run: `flutter build apk --debug`
+6. Return PASS, PASS WITH WARNINGS, or FAIL with reasons
