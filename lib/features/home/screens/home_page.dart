@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../core/providers/theme_provider.dart';
 import '../../discount_calculator/screens/discount_calculator_screen.dart';
-import '../../sales_price_calculator/screens/sales_price_calculator_screen.dart';
 import '../../product_inventory/screens/product_inventory_screen.dart';
 import '../../sales_history/screens/sales_history_screen.dart';
-import '../../../main.dart';
+import '../../sales_price_calculator/screens/sales_price_calculator_screen.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -13,156 +14,230 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 200),
-      vsync: this,
-    );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(_animationController);
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
+class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
+    final menuItems = [
+      (
+        title: 'Calculadora de Descuentos',
+        subtitle: 'Descuentos porcentuales, fijos e impuestos',
+        icon: Icons.discount_rounded,
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const DiscountCalculatorScreen(),
+            ),
+          );
+        },
+      ),
+      (
+        title: 'Calculadora de Precios',
+        subtitle: 'Markup, margen bruto e impuestos',
+        icon: Icons.price_change_rounded,
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const SalesPriceCalculatorScreen(),
+            ),
+          );
+        },
+      ),
+      (
+        title: 'Inventario de Productos',
+        subtitle: 'Consulta y seguimiento de inventario',
+        icon: Icons.inventory_2_rounded,
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const ProductInventoryScreen(),
+            ),
+          );
+        },
+      ),
+      (
+        title: 'Historial de Ventas',
+        subtitle: 'Registros y trazabilidad comercial',
+        icon: Icons.history_rounded,
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const SalesHistoryScreen(),
+            ),
+          );
+        },
+      ),
+    ];
+
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Center(child: Text(widget.title)), // Centered title
+        title: Text(widget.title),
         actions: [
           IconButton(
             icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
             onPressed: () {
-              MyApp.of(context)?.toggleTheme();
+              context.read<ThemeProvider>().toggleTheme();
             },
           ),
         ],
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          return SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const SizedBox(height: 20),
-                  _buildMenuButton(
-                    context,
-                    'Calculadora de Descuentos',
-                    Icons.discount,
-                    constraints,
-                    () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const ScreenOne()),
-                      );
-                    },
+          final width = constraints.maxWidth;
+          final textScale =
+              MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 1.5);
+          final crossAxisCount = width >= 1100
+              ? 3
+              : width >= 700
+                  ? 2
+                  : 1;
+          final mainAxisExtent = 124 + ((textScale - 1.0) * 48);
+
+          return CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Panel principal',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Accede rapido a tus herramientas comerciales.',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 20),
-                  _buildMenuButton(
-                    context,
-                    'Calculadora Precios Venta',
-                    Icons.price_change,
-                    constraints,
-                    () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const ScreenTwo()),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  _buildMenuButton(
-                    context,
-                    'Inventario de Productos',
-                    Icons.inventory,
-                    constraints,
-                    () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const ScreenThree()),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  _buildMenuButton(
-                    context,
-                    'Historial de Ventas',
-                    Icons.history,
-                    constraints,
-                    () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const ScreenFour()),
-                      );
-                    },
-                  ),
-                ],
+                ),
               ),
-            ),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                sliver: SliverGrid.builder(
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
+                    crossAxisSpacing: 14,
+                    mainAxisSpacing: 14,
+                    mainAxisExtent: mainAxisExtent,
+                  ),
+                  itemCount: menuItems.length,
+                  itemBuilder: (context, index) {
+                    final item = menuItems[index];
+                    return _DashboardMenuCard(
+                      title: item.title,
+                      subtitle: item.subtitle,
+                      icon: item.icon,
+                      onTap: item.onTap,
+                    );
+                  },
+                ),
+              ),
+            ],
           );
         },
       ),
     );
   }
+}
 
-  Widget _buildMenuButton(BuildContext context, String title, IconData icon,
-      BoxConstraints constraints, VoidCallback onPressed) {
-    double buttonWidth = constraints.maxWidth > 600 
-        ? constraints.maxWidth * 0.7 
-        : constraints.maxWidth * 0.9;
+class _DashboardMenuCard extends StatefulWidget {
+  const _DashboardMenuCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  State<_DashboardMenuCard> createState() => _DashboardMenuCardState();
+}
+
+class _DashboardMenuCardState extends State<_DashboardMenuCard> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return MouseRegion(
-      onEnter: (_) => _animationController.forward(),
-      onExit: (_) => _animationController.reverse(),
-      child: AnimatedBuilder(
-        animation: _scaleAnimation,
-        builder: (context, child) => Transform.scale(
-          scale: _scaleAnimation.value,
-          child: Container(
-            width: buttonWidth,
-            constraints: const BoxConstraints(minHeight: 80),
-            margin: const EdgeInsets.symmetric(vertical: 8),
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                elevation: 4,
-              ),
-              onPressed: onPressed,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: AnimatedScale(
+        duration: const Duration(milliseconds: 150),
+        scale: _hovered ? 1.01 : 1.0,
+        child: Card(
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: widget.onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               child: Row(
                 children: [
-                  Icon(icon, size: 30),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.left,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      widget.icon,
+                      color: colorScheme.onPrimaryContainer,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  const Icon(Icons.arrow_forward_ios),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Flexible(
+                          child: Text(
+                            widget.subtitle,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 ],
               ),
             ),

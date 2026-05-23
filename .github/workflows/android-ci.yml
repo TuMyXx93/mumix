@@ -1,5 +1,8 @@
 name: Numix CI/CD (Android)
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   push:
     branches: [ "main" ]
@@ -13,10 +16,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v5
         with:
           distribution: 'zulu'
           java-version: '17'
@@ -34,6 +37,14 @@ jobs:
       - name: Run Linter (Security & Code Quality)
         run: flutter analyze --fatal-infos --fatal-warnings
 
+      - name: Engram Memory Health Check
+        run: |
+          if command -v engram &> /dev/null; then
+            engram doctor --project numix || echo "Engram not configured, skipping"
+          else
+            echo "Engram CLI not installed, skipping memory health check"
+          fi
+
       - name: Run Unit Tests (Math Engine Coverage)
         run: flutter test --coverage
 
@@ -43,10 +54,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v5
         with:
           distribution: 'zulu'
           java-version: '17'

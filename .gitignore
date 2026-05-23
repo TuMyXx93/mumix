@@ -54,3 +54,13 @@ GoogleService-Info.plist
 
 # Local Debugging / Asset folders (User requested)
 ImagesErrors/
+
+# OpenCode
+.opencode/node_modules/
+
+# Engram local database (shared chunks can be committed separately)
+.engram/engram.db
+
+# Engram local project config (machine-specific)
+.engramrc.json
+.env.engram

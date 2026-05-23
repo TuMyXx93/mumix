@@ -24,9 +24,7 @@ void main() {
 
     test('Calculates simple percentage discount correctly', () {
       provider.calculateDiscount(
-        originalPriceStr: '100', 
-        primaryDiscountStr: '20'
-      );
+          originalPriceStr: '100', primaryDiscountStr: '20');
 
       expect(provider.errorMessage, isNull);
       expect(provider.savedAmount, 20.0);
@@ -37,7 +35,7 @@ void main() {
 
     test('Calculates sequential percentage discount correctly', () {
       provider.calculateDiscount(
-        originalPriceStr: '100', 
+        originalPriceStr: '100',
         primaryDiscountStr: '20',
         additionalDiscountStr: '10',
       );
@@ -51,7 +49,7 @@ void main() {
     test('Calculates fixed amount discount correctly', () {
       provider.setDiscountType(DiscountType.fixedAmount);
       provider.calculateDiscount(
-        originalPriceStr: '150', 
+        originalPriceStr: '150',
         primaryDiscountStr: '30',
         additionalDiscountStr: '15',
       );
@@ -64,7 +62,7 @@ void main() {
 
     test('Calculates correctly with tax', () {
       provider.calculateDiscount(
-        originalPriceStr: '100', 
+        originalPriceStr: '100',
         primaryDiscountStr: '20',
         taxStr: '15',
       );
@@ -79,52 +77,60 @@ void main() {
     test('Fixed discount exceeds original price shows error', () {
       provider.setDiscountType(DiscountType.fixedAmount);
       provider.calculateDiscount(
-        originalPriceStr: '100', 
-        primaryDiscountStr: '120'
-      );
+          originalPriceStr: '100', primaryDiscountStr: '120');
 
-      expect(provider.errorMessage, 'El descuento no puede ser mayor al precio original');
+      expect(provider.errorMessage,
+          'El descuento no puede ser mayor al precio original');
       expect(provider.finalPrice, isNull);
     });
 
     test('Percentage > 100 shows error', () {
       provider.calculateDiscount(
-        originalPriceStr: '100', 
-        primaryDiscountStr: '110'
-      );
+          originalPriceStr: '100', primaryDiscountStr: '110');
 
-      expect(provider.errorMessage, 'Los porcentajes de descuento no pueden exceder 100%');
+      expect(provider.errorMessage,
+          'Los porcentajes de descuento no pueden exceder 100%');
       expect(provider.finalPrice, isNull);
     });
 
     test('Negative values show error', () {
       provider.calculateDiscount(
-        originalPriceStr: '-100', 
-        primaryDiscountStr: '20'
-      );
+          originalPriceStr: '-100', primaryDiscountStr: '20');
 
       expect(provider.errorMessage, 'Los valores no pueden ser negativos');
       expect(provider.finalPrice, isNull);
     });
 
+    test('Empty required inputs clear results without error', () {
+      provider.calculateDiscount(
+          originalPriceStr: '100', primaryDiscountStr: '20');
+      expect(provider.finalPrice, 80.0);
+
+      provider.calculateDiscount(
+          originalPriceStr: '', primaryDiscountStr: '20');
+
+      expect(provider.errorMessage, isNull);
+      expect(provider.finalPrice, isNull);
+      expect(provider.savedAmount, isNull);
+    });
+
     test('Clears values correctly', () {
-      provider.calculateDiscount(originalPriceStr: '100', primaryDiscountStr: '20');
+      provider.calculateDiscount(
+          originalPriceStr: '100', primaryDiscountStr: '20');
       provider.clear();
 
       expect(provider.finalPrice, isNull);
       expect(provider.savedAmount, isNull);
       expect(provider.errorMessage, isNull);
     });
-    
+
     test('Persists and loads data from SharedPreferences', () async {
       provider.calculateDiscount(
-        originalPriceStr: '200', 
-        primaryDiscountStr: '50'
-      );
-      
+          originalPriceStr: '200', primaryDiscountStr: '50');
+
       // Simulate app restart / new provider instance
       final newProvider = DiscountCalculatorProvider(prefs);
-      
+
       expect(newProvider.originalPriceInput, '200');
       expect(newProvider.primaryDiscountInput, '50');
       expect(newProvider.finalPrice, 100.0);

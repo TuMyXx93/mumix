@@ -9,10 +9,10 @@ enum MarginType {
 class SalesPriceProvider extends ChangeNotifier {
   final SharedPreferences _prefs;
 
-  double? _baseSalePrice; 
-  double? _finalPrice; 
-  double? _profitAmount; 
-  double? _taxAmount; 
+  double? _baseSalePrice;
+  double? _finalPrice;
+  double? _profitAmount;
+  double? _taxAmount;
   String? _errorMessage;
 
   MarginType _marginType = MarginType.markup;
@@ -42,7 +42,7 @@ class SalesPriceProvider extends ChangeNotifier {
     _costInput = _prefs.getString('sales_cost') ?? '';
     _profitPercentInput = _prefs.getString('sales_profit') ?? '';
     _taxInput = _prefs.getString('sales_tax') ?? '';
-    
+
     final typeIndex = _prefs.getInt('sales_margin_type') ?? 0;
     _marginType = typeIndex == 0 ? MarginType.markup : MarginType.margin;
 
@@ -58,8 +58,8 @@ class SalesPriceProvider extends ChangeNotifier {
   }
 
   void calculatePrice({
-    required String costStr, 
-    required String profitPercentStr, 
+    required String costStr,
+    required String profitPercentStr,
     String taxStr = '0',
   }) {
     _costInput = costStr;
@@ -75,6 +75,12 @@ class SalesPriceProvider extends ChangeNotifier {
 
   void _calculateInternal() {
     _errorMessage = null;
+
+    if (_costInput.trim().isEmpty || _profitPercentInput.trim().isEmpty) {
+      _clearResults();
+      notifyListeners();
+      return;
+    }
 
     final cost = double.tryParse(_costInput);
     final profitPercent = double.tryParse(_profitPercentInput);
@@ -126,7 +132,7 @@ class SalesPriceProvider extends ChangeNotifier {
     _costInput = '';
     _profitPercentInput = '';
     _taxInput = '';
-    
+
     _prefs.remove('sales_cost');
     _prefs.remove('sales_profit');
     _prefs.remove('sales_tax');
