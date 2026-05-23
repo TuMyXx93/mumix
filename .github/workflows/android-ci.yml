@@ -37,6 +37,14 @@ jobs:
       - name: Run Linter (Security & Code Quality)
         run: flutter analyze --fatal-infos --fatal-warnings
 
+      - name: Engram Memory Health Check
+        run: |
+          if command -v engram &> /dev/null; then
+            engram doctor --project numix || echo "Engram not configured, skipping"
+          else
+            echo "Engram CLI not installed, skipping memory health check"
+          fi
+
       - name: Run Unit Tests (Math Engine Coverage)
         run: flutter test --coverage
 
